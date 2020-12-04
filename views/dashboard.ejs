@@ -61,7 +61,7 @@
       </div>
     </header>
 
-    <aside class="main-sidebar">
+    <aside class="goals-sidebar">
       <div class="sidebar">
         <div class="sidebar-heading">
           <a href="/addGoal" style="margin:auto; color:white;">Goals</a>
@@ -81,7 +81,44 @@
         <canvas id="canvas" width="1870" height="906" style="z-index: 0; width: 1247px; height: 604px; cursor: move;"></canvas>
       </div>
     </main>
+
+    <aside class="subgoals-sidebar">
+      <div class="sidebar">
+        <div class="sidebar-heading">
+          <a href="/addGoal" style="margin:auto; color:white;">Sub Goals</a>
+        </div>
+        <div>
+
+          <% subGoals.forEach(function(subGoal){ %>
+          <%  if(subGoal.subGoalName === "" || subGoal.subGoalName === undefined){ %>
+              <form class="" action="/addGoalName" method="post">
+
+                <input type="text" id="subName" name="subName" placeholder=<%= subGoal.subGoalNo %> value="">
+                <input type="hidden" name="subGoalNo" value=<%=subGoal.subGoalNo%>>
+                 <button type="submit" class="btn btn-dark" name="button">Set</button>
+              </form>
+          <%  }else{ %>
+            <div class="" style="padding-bottom:5px;">
+              <form class="" action="/checkReached" method="post">
+                <div class=""  style="width:200px;display:inline-block;">
+                  <a style="color:white;" class="sidebar-subgoal-name" href="#"><%=subGoal.subGoalName%></a>
+                </div>
+              <%  if(subGoal.reached === true){ %>
+                  <button type="text" onclick="this.form.submit()"  class="btn btn-primary" name="reachedButton" value=<%=subGoal.subGoalNo%>>reached</button>
+              <%  }else{ %>
+                  <button type="text" onclick="this.form.submit()"  class="btn btn-dark" name="reachedButton" value=<%=subGoal.subGoalNo%>>reached</button>
+              <%  } %>
+              </form>
+            </div>
+          <%  }  %>
+
+        <%  }) %>
+        </div>
+      </div>
+    </aside>
+
   </div>
+
 
 
 
@@ -92,33 +129,45 @@
 
     <script type="text/javascript">
 
-      var subGoals = <%= subGoals %>;
-      var canvas = document.getElementById("canvas");
-      var ctx = canvas.getContext("2d");
-      var start = 20;
-      ctx.lineCap = "round"
-      ctx.lineWidth= 10;
-      var canvasWidthCenter = $("canvas").innerWidth()/2;
-      var canvasHeigthCenter = $("canvas").innerHeight()/2;
+      const subGoals = <%= subGoals.length %>;
+      const canvas = document.getElementById("canvas");
+      canvas.addEventListener("click",function(options){
+        console.log(options);
+      })
+      const c = canvas.getContext("2d");
+      var xPadding = 20;
+      const space = 50;
+      const radius = 5;
+      c.lineCap = "round"
+      c.lineWidth= 10;
+      const canvasWidthCenter = $("canvas").innerWidth()/2;
+      const canvasHeigthCenter = $("canvas").innerHeight()/2;
 
+      c.moveTo(xPadding,canvasHeigthCenter);
       for(var i=0;i<=subGoals;i++){
-        ctx.moveTo(start,canvasHeigthCenter);
-        ctx.lineTo(start+50,canvasHeigthCenter);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(start+50,canvasHeigthCenter, 5, 0, 2* Math.PI);
-        ctx.fillStyle = "black";
-        ctx.fill();
-        start = start+50;
-      }
-      ctx.beginPath();
-      ctx.arc(start,canvasHeigthCenter, 15, 0, 2* Math.PI);
-      ctx.fillStyle = "black";
-      ctx.fill();
+        if(i<subGoals){
+          c.lineTo(xPadding+50,canvasHeigthCenter);
+          c.stroke();
+          c.beginPath();
+        }
+        if(i !== subGoals){
+          c.arc(xPadding+50,canvasHeigthCenter, radius, 0, 2* Math.PI);
+          c.fillStyle = "black";
+          c.fill();
+        }else{
+          c.beginPath();
+          c.arc(xPadding,canvasHeigthCenter, radius*3, 0, 2* Math.PI);
+          c.fillStyle = "black";
+          c.fill();
+        }
 
+        xPadding = xPadding+50;
+      }
 
 
     </script>
+
+    <script src="/js/script.js" charset="utf-8"></script>
 
 </body>
 

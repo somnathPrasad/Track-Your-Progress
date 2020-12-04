@@ -35,7 +35,17 @@ let selectedGoal = "";
 
 const goalSchema = new mongoose.Schema({
   goal:String,
-  subGoals:Number
+  subGoals:[{
+    subGoalNo:Number,
+    subGoalName:{
+      type:String,
+      default:""
+    },
+    reached:{
+      type:Boolean,
+      default:false
+    }
+  }]
 });
 
 const userSchema = new mongoose.Schema({
@@ -132,7 +142,7 @@ app.get("/login",function(req,res){
 ////////////////////////////ROUTES TO DASHBOARD PAGE/////////////////////
 app.get("/dashboard",function(req,res){
 const allGoals = [];
-let subgoals = "";
+let subgoals = [];
   User.findOne({$or:[{facebookId:id},{googleId:id}]},function(err,foundDoc){
 
     if(foundDoc.goals.length>0){
@@ -147,7 +157,7 @@ let subgoals = "";
       });
     }else{
       const allGoals = [];
-      let subgoals = "";
+      let subgoals = [];
     }
 
     if(req.isAuthenticated()){
@@ -160,7 +170,20 @@ let subgoals = "";
   });
 });
 
-app.post("/dashboard",function(req,res){
+app.post("/addGoalName",function(req,res){
+
+  const subGoalName = req.body.subName;
+  const subGoalNo = req.body.subGoalNo;
+
+  User.findOne({$or:[{facebookId:id},{googleId:id}]},{'goals': {$elemMatch: {goal: selectedGoal}}}, function(err, foundGoal) {
+    if (!err) {
+      foundGoal.goals[0].subGoals[subGoalNo-1].subGoalName = subGoalName;
+      foundGoal.save();
+      res.redirect("/dashboard");
+    }else{
+      console.log(err);
+    }
+  });
 
 });
 ////////////////////////////ROUTES TO AddGoal PAGE/////////////////////
@@ -171,10 +194,15 @@ app.get("/addGoal",function(req,res){
 app.post("/addGoal",function(req,res){
   const newGoal = req.body.newGoal;
   const noOfSubGoals = req.body.noOfSubGoals;
+  let subGoals = [];
+
+  for(var i=0;i<noOfSubGoals;i++){
+    subGoals.push({subGoalNo:i+1})
+  }
 
   const goal = new Goal({
     goal: newGoal,
-    subGoals:noOfSubGoals
+    subGoals:subGoals
   });
   User.findOneAndUpdate({$or:[{facebookId:id},{googleId:id}]},{$push:{goals:goal}},function(err,foundUser){
     if(!err){
@@ -198,6 +226,30 @@ app.get("/logout",function(req,res){
   req.logout();
   res.redirect("/");
 });
+
+
+app.post("/checkReached",function(req,res){
+  const subGoalNumber = req.body.reachedButton;
+
+  User.findOne({$or:[{facebookId:id},{googleId:id}]},{'goals': {$elemMatch: {goal: selectedGoal}}}, function(err, foundGoal) {
+    if (!err) {
+      if(foundGoal.goals[0].subGoals[subGoalNumber-1].reached === false){
+        foundGoal.goals[0].subGoals[subGoalNumber-1].reached = true;
+        foundGoal.save();
+
+      }else{
+        foundGoal.goals[0].subGoals[subGoalNumber-1].reached = false;
+        foundGoal.save();
+
+      }
+
+      res.redirect("/dashboard");
+    }else{
+      console.log(err);
+    }
+  });
+
+})
 
 
 

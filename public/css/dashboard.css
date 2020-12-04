@@ -104,13 +104,24 @@ h1, h2, h3, h4, h5, h6 {
 .blog-footer p:last-child {
   margin-bottom: 0;
 }
-.main-sidebar{
+.goals-sidebar{
   background-color: #212b2b;
   position: absolute;
   top: 10;
   left: 0;
   height: 100%;
   width:250px;
+  text-align: center;
+  border-right: 2px solid grey;
+  z-index: 100;
+}
+.subgoals-sidebar{
+  background-color: #212b2b;
+  position: absolute;
+  top: 10;
+  right: 0;
+  height: 100%;
+  width:300px;
   text-align: center;
   border-right: 2px solid grey;
   z-index: 100;
@@ -136,4 +147,7 @@ main{
   margin-bottom: 8px;
   display:block;
   padding: 0;
+}
+.sidebar-subgoal-name{
+  padding-right: 5px;
 }
