@@ -22,8 +22,11 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-
-mongoose.connect("mongodb://localhost:27017/userDB",{useNewUrlParser:true, useUnifiedTopology: true,useFindAndModify:false});
+//create and connect to the data
+mongoose.connect("mongodb+srv://admin-somnath:Test123@cluster0.x24ma.mongodb.net/userDB", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
 mongoose.set("useCreateIndex",true);
 
 //global variables
@@ -143,6 +146,7 @@ app.get("/login",function(req,res){
 app.get("/dashboard",function(req,res){
 const allGoals = [];
 let subgoals = [];
+const subGoalsReached = [];
   User.findOne({$or:[{facebookId:id},{googleId:id}]},function(err,foundDoc){
 
     if(foundDoc.goals.length>0){
@@ -153,6 +157,10 @@ let subgoals = [];
         allGoals.push(goal.goal);
         if(selectedGoal === goal.goal){
           subgoals = goal.subGoals;
+          goal.subGoals.forEach(function(subGoal){
+            subGoalsReached.push(subGoal.reached);
+          });
+
         }
       });
     }else{
@@ -163,7 +171,7 @@ let subgoals = [];
     if(req.isAuthenticated()){
       //pass all goals to dashboard page
       // pass no of sub goals to dashboard page
-      res.render("dashboard",{allGoals:allGoals,subGoals:subgoals});
+      res.render("dashboard",{allGoals:allGoals,subGoals:subgoals,subGoalsReached:subGoalsReached});
     }else{
       res.redirect("/login");
     }
@@ -252,7 +260,10 @@ app.post("/checkReached",function(req,res){
 })
 
 
-
-app.listen(3000,function(){
-  console.log("server started on port 3000");
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3000;
+}
+app.listen(port,function(){
+  console.log("Server started successful.");
 });

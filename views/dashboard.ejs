@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
 
   <!-- Favicons -->
-  <link href="/assets/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+
   <link rel="apple-touch-icon" href="/docs/4.5/assets/img/favicons/apple-touch-icon.png" sizes="180x180">
   <link rel="icon" href="/docs/4.5/assets/img/favicons/favicon-32x32.png" sizes="32x32" type="image/png">
   <link rel="icon" href="/docs/4.5/assets/img/favicons/favicon-16x16.png" sizes="16x16" type="image/png">
@@ -69,16 +69,17 @@
         <div>
 
           <% allGoals.forEach(function(goal){ %>
-            <a style="color:white;" class="sidebar-content" href="/dashboard/<%=goal%>"><%= goal %></a>
-        <%  }) %>
+          <a style="color:white;" class="sidebar-content" href="/dashboard/<%=goal%>"><%= goal %></a>
+          <%  }) %>
 
         </div>
       </div>
     </aside>
 
     <main>
-      <div class=" p-4 p-md-5 text-white rounded">
-        <canvas id="canvas" width="1870" height="906" style="z-index: 0; width: 1247px; height: 604px; cursor: move;"></canvas>
+      <div class=" p-4 p-md-5 text-white rounded canvas-div">
+        <canvas id="canvas" width="1870" class="canvas" height="906" style="z-index: 0; width: 1247px; height: 604px; cursor: move;"></canvas>
+        <canvas id="progressBarCanvas" class="canvas" width="1870" height="906" style="z-index: 10; width: 1247px; height: 604px; cursor: move;"></canvas>
       </div>
     </main>
 
@@ -91,28 +92,28 @@
 
           <% subGoals.forEach(function(subGoal){ %>
           <%  if(subGoal.subGoalName === "" || subGoal.subGoalName === undefined){ %>
-              <form class="" action="/addGoalName" method="post">
+          <form class="" action="/addGoalName" method="post">
 
-                <input type="text" id="subName" name="subName" placeholder=<%= subGoal.subGoalNo %> value="">
-                <input type="hidden" name="subGoalNo" value=<%=subGoal.subGoalNo%>>
-                 <button type="submit" class="btn btn-dark" name="button">Set</button>
-              </form>
+            <input type="text" id="subName" name="subName" placeholder=<%= subGoal.subGoalNo %> value="">
+            <input type="hidden" name="subGoalNo" value=<%=subGoal.subGoalNo%>>
+            <button type="submit" class="btn btn-dark" name="button">Set</button>
+          </form>
           <%  }else{ %>
-            <div class="" style="padding-bottom:5px;">
-              <form class="" action="/checkReached" method="post">
-                <div class=""  style="width:200px;display:inline-block;">
-                  <a style="color:white;" class="sidebar-subgoal-name" href="#"><%=subGoal.subGoalName%></a>
-                </div>
+          <div class="" style="padding-bottom:5px;">
+            <form class="" action="/checkReached" method="post">
+              <div class="" style="width:200px;display:inline-block;">
+                <a style="color:white;" class="sidebar-subgoal-name" href="#"><%=subGoal.subGoalName%></a>
+              </div>
               <%  if(subGoal.reached === true){ %>
-                  <button type="text" onclick="this.form.submit()"  class="btn btn-primary" name="reachedButton" value=<%=subGoal.subGoalNo%>>reached</button>
+              <button type="text" onclick="this.form.submit()" class="btn btn-primary" name="reachedButton" id="reachedButton" value=<%=subGoal.subGoalNo%>>reached</button>
               <%  }else{ %>
-                  <button type="text" onclick="this.form.submit()"  class="btn btn-dark" name="reachedButton" value=<%=subGoal.subGoalNo%>>reached</button>
+              <button type="text" onclick="this.form.submit()" class="btn btn-dark" name="reachedButton" id="reachedButton" value=<%=subGoal.subGoalNo%>>reached</button>
               <%  } %>
-              </form>
-            </div>
+            </form>
+          </div>
           <%  }  %>
 
-        <%  }) %>
+          <%  }) %>
         </div>
       </div>
     </aside>
@@ -123,51 +124,104 @@
 
 
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
-    <script src="js/script.js" charset="utf-8"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ho+j7jyWK8fNQe+A12Hb8AhRq26LrZ/JpcUGGOn+Y7RsweNrtN/tE3MoK7ZeZDyx" crossorigin="anonymous"></script>
+  <script src="js/script.js" charset="utf-8"></script>
 
-    <script type="text/javascript">
+  <script type="text/javascript">
+    const NoOfsubGoals = <%= subGoals.length %> ;
+    const subGoalsReached = new Array(<%= subGoalsReached %>);
+    const canvas = document.getElementById("canvas");
+    const c = canvas.getContext("2d");
+    const progressBarCanvas = document.getElementById("progressBarCanvas");
+    const pC = progressBarCanvas.getContext("2d");
+    var dotPos = [];
+    const errorX = 23;
+    const errorY = 102;
+    var xPadding = 20;
+    const space = 50;
+    const radius = 5;
+    c.lineCap = "round"
+    c.lineWidth = 10;
+    pC.lineCap = "round"
+    pC.lineWidth = 10;
+    const canvasWidthCenter = $("canvas").innerWidth() / 2;
+    const canvasHeigthCenter = $("canvas").innerHeight() / 2;
 
-      const subGoals = <%= subGoals.length %>;
-      const canvas = document.getElementById("canvas");
-      canvas.addEventListener("click",function(options){
-        console.log(options);
-      })
-      const c = canvas.getContext("2d");
-      var xPadding = 20;
-      const space = 50;
-      const radius = 5;
-      c.lineCap = "round"
-      c.lineWidth= 10;
-      const canvasWidthCenter = $("canvas").innerWidth()/2;
-      const canvasHeigthCenter = $("canvas").innerHeight()/2;
-
-      c.moveTo(xPadding,canvasHeigthCenter);
-      for(var i=0;i<=subGoals;i++){
-        if(i<subGoals){
-          c.lineTo(xPadding+50,canvasHeigthCenter);
-          c.stroke();
-          c.beginPath();
-        }
-        if(i !== subGoals){
-          c.arc(xPadding+50,canvasHeigthCenter, radius, 0, 2* Math.PI);
-          c.fillStyle = "black";
-          c.fill();
-        }else{
-          c.beginPath();
-          c.arc(xPadding,canvasHeigthCenter, radius*3, 0, 2* Math.PI);
-          c.fillStyle = "black";
-          c.fill();
-        }
-
-        xPadding = xPadding+50;
+//main bar
+    c.moveTo(xPadding, canvasHeigthCenter);
+    for (var i = 0; i <= NoOfsubGoals; i++) {
+      if (i < NoOfsubGoals) {
+        c.lineTo(xPadding + 50, canvasHeigthCenter);
+        c.stroke();
+      }
+      if (i !== NoOfsubGoals) {
+        dotPos.push({
+          x: (xPadding + 50) - 23,
+          y: canvasHeigthCenter - 102,
+          r:radius
+        });
+        c.beginPath();
+        c.arc(xPadding + 50, canvasHeigthCenter, radius, 0, 2 * Math.PI);
+        c.fillStyle = "black";
+        c.fill();
+      } else {
+        dotPos.push({
+          x: (xPadding + 50) - 20,
+          y: canvasHeigthCenter - 102,
+          r:radius*3
+        });
+        c.beginPath();
+        c.arc(xPadding, canvasHeigthCenter, radius * 3, 0, 2 * Math.PI);
+        c.fill();
       }
 
+      xPadding = xPadding + 50;
+    }
 
-    </script>
+//reached bar
+xPadding = 20;
+pC.fillStyle = "blue";
+pC.strokeStyle = "blue";
 
-    <script src="/js/script.js" charset="utf-8"></script>
+pC.moveTo(xPadding, canvasHeigthCenter);
+for (var i = 0; i <= NoOfsubGoals; i++) {
+  if (i < NoOfsubGoals) {
+    if(subGoalsReached[i] === true){
+      pC.lineTo(xPadding + 50, canvasHeigthCenter);
+      pC.stroke();
+    }
+    if(subGoalsReached[i] === true){
+          pC.beginPath();
+          pC.arc(xPadding + 50, canvasHeigthCenter, radius, 0, 2 * Math.PI);
+          pC.fill();
+    }
+}else {
+    if(subGoalsReached[i-1] === true){
+      pC.beginPath();
+      pC.arc(xPadding, canvasHeigthCenter, radius * 3, 0, 2 * Math.PI);
+      pC.fill();
+}
+  }
+  xPadding = xPadding + 50;
+}
+
+    // canvas.onmousemove = function(e) {
+    //   var rect = this.getBoundingClientRect();
+    //   var  x = e.clientX - rect.left;
+    //   var  y = e.clientY - rect.top;
+    //   var  i = 0;
+    //   var  r;
+    //   while (r = dotPos[i++]) {
+    //     if ((x-r.x)*(x-r.x)+(y-r.y)*(y-r.y) < r.r*r.r) {
+    //         alert(x);
+    //     }
+    //   }
+    //
+    // };
+  </script>
+
+  <script src="/js/script.js" charset="utf-8"></script>
 
 </body>
 
