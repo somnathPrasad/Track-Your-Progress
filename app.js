@@ -32,7 +32,7 @@ mongoose.set("useCreateIndex",true);
 //global variables
 let id = "";
 let selectedGoal = "";
-
+const uri = process.env.MONGODB_URI;
 
 
 
