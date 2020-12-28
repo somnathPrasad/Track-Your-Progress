@@ -8,6 +8,10 @@ const passport = require("passport");
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const FacebookStrategy = require('passport-facebook').Strategy;
 const findOrCreate = require("mongoose-findorcreate");
+const CONFIG = require("./config");
+const google = require("googleapis").google;
+
+
 
 const app = express();
 app.use(express.static("public"));
@@ -33,7 +37,7 @@ mongoose.set("useCreateIndex",true);
 let id = "";
 let selectedGoal = "";
 const uri = process.env.MONGODB_URI;
-
+const OAuth2 = google.auth.OAuth2;
 
 
 const goalSchema = new mongoose.Schema({
@@ -75,13 +79,27 @@ passport.deserializeUser(function(id,done){
   });
 });
 
-
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: "https://sleepy-anchorage-97310.herokuapp.com/auth/google/trackYourProgress",
+    callbackURL: "http://localhost:3000/auth/google/trackYourProgress",
     userProfileURL:"https://www.googleapis.com/oauth2/v3/userinfo"
   },
+  // function execute() {
+  //   return gapi.client.youtube.subscriptions.list({
+  //     "part": [
+  //       "snippet,contentDetails"
+  //     ],
+  //     "channelId": "UCL8q-8ujVGhMYCAVM_bJ-9w",
+  //     "forChannelId": "UC_x5XG1OV2P6uZZ5FSM9Ttw",
+  //     "maxResults": 50
+  //   })
+  //       .then(function(response) {
+  //               // Handle the results here (response.result has the parsed body).
+  //               console.log("Response", response);
+  //             },
+  //             function(err) { console.error("Execute error", err); });
+  // },
   function(accessToken, refreshToken, profile, cb) {
     console.log(profile);
     id = profile.id;
@@ -94,7 +112,7 @@ passport.use(new GoogleStrategy({
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: "https://sleepy-anchorage-97310.herokuapp.com/auth/facebook/trackYourProgress"
+    callbackURL: "http://localhost:3000/auth/facebook/trackYourProgress"
   },
   function(accessToken, refreshToken, profile, cb) {
     console.log(profile);
@@ -123,7 +141,7 @@ res.redirect('/dashboard');
 
 ////////////////////////////ROUTES TO GOOGLE/////////////////////////////
 app.get('/auth/google',
-  passport.authenticate('google', { scope: ["profile"] }));
+  passport.authenticate('google', { scope: ["profile","https://www.googleapis.com/auth/youtube"] }));
 
 app.get('/auth/google/trackYourProgress',
     passport.authenticate('google', { failureRedirect: '/login' }),
